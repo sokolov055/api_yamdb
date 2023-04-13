@@ -51,6 +51,20 @@ class User(AbstractUser):
         return self.username
 
 
+class Category(models.Model):
+    name = models.CharField(
+        'id',
+        max_length=200,
+    )
+    slug = models.SlugField(
+        unique=True,
+        db_index=True
+    )
+
+    def __str__(self):
+        return f'{self.name} {self.name}'
+
+
 class Title(models.Model):
     name = models.CharField(
         'название',
