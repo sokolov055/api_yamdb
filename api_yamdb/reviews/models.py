@@ -65,6 +65,18 @@ class Category(models.Model):
         return f'{self.name} {self.name}'
 
 
+class Genre(models.Model):
+    name = models.CharField(
+        'имя жанра',
+        max_length=200,
+    )
+    slug = models.SlugField(
+        'слаг жанра',
+        unique=True,
+        db_index=True
+    )
+
+
 class Title(models.Model):
     name = models.CharField(
         'название',
