@@ -1,7 +1,7 @@
 from rest_framework.routers import SimpleRouter
 from django.urls import include, path
 
-from .views import TitleViewSet, UsersViewSet, CategoryViewSet
+from .views import TitleViewSet, UsersViewSet, CategoryViewSet, GenreViewSet
 
 
 app_name = 'api'
@@ -25,6 +25,12 @@ router.register(
     r'category',
     CategoryViewSet,
     basename='category'
+)
+
+router.register(
+    r'genre',
+    GenreViewSet,
+    basename='genre'
 )
 
 urlpatterns = [
