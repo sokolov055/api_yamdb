@@ -2,7 +2,8 @@ from reviews.models import Title, User, Category, Genre
 from .serializers import (TitleReadSerializer,
                           UsersSerializer,
                           CategorySerializer,
-                          GenreSerializer)
+                          GenreSerializer,
+                          TitleWriteSerializer)
 from rest_framework import viewsets
 from rest_framework.viewsets import ModelViewSet
 
@@ -10,6 +11,7 @@ from rest_framework.viewsets import ModelViewSet
 class UsersViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UsersSerializer
+    lookup_field = 'username'
 
 
 class TitleViewSet(ModelViewSet):
@@ -18,6 +20,11 @@ class TitleViewSet(ModelViewSet):
     """
     queryset = Title.objects.all()
     serializer_class = TitleReadSerializer
+
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve'):
+            return TitleReadSerializer
+        return TitleWriteSerializer
 
 
 class CategoryViewSet(ModelViewSet):

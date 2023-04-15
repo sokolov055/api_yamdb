@@ -8,9 +8,26 @@ class UsersSerializer(serializers.ModelSerializer):
         fields = (
             'username', 'email', 'first_name',
             'last_name', 'bio', 'role')
+        lookup_field = 'username'
 
 
 class TitleReadSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = '__all__'
+        model = Title
+
+
+class TitleWriteSerializer(serializers.ModelSerializer):
+    category = serializers.SlugRelatedField(
+        queryset=Category.objects.all(),
+        slug_field='slug'
+    )
+    genre = serializers.SlugRelatedField(
+        queryset=Genre.objects.all(),
+        slug_field='slug',
+        many=True
+    )
+
     class Meta:
         fields = '__all__'
         model = Title
