@@ -22,15 +22,15 @@ router.register(
 
 
 router.register(
-    r'category',
+    r'categories',
     CategoryViewSet,
-    basename='category'
+    basename='categories'
 )
 
 router.register(
-    r'genre',
+    r'genres',
     GenreViewSet,
-    basename='genre'
+    basename='genres'
 )
 
 urlpatterns = [
