@@ -141,7 +141,7 @@ class Review(models.Model):
         related_name='reviews',
         verbose_name='Автор'
     )
-    tilte = models.ForeignKey(
+    title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
         related_name='reviews',
@@ -160,9 +160,9 @@ class Review(models.Model):
         ordering = ['-pub_date']
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
-        constrains = [
-            models.UniqueConstraint(
-                fields=['author', 'tile'],
-                name='unique_author_title'
-            )
-        ]
+        # constrains = [
+        #     models.UniqueConstraint(
+        #         fields=['author', 'tile'],
+        #         name='unique_author_title'
+        #     )
+        # ]
