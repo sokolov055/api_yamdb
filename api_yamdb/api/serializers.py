@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from reviews.models import Title, User, Category, Genre
+from reviews.models import Category, Genre, Review, Title, User
 
 
 class UsersSerializer(serializers.ModelSerializer):
@@ -45,3 +45,28 @@ class GenreSerializer(serializers.ModelSerializer):
         fields = ('name', 'slug')
         model = Genre
         lookup_field = 'slug'
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        required=False,
+        read_only=True,
+        slug_field='username',
+    )
+
+    class Meta:
+        model = Review
+        fields = ('id', 'score', 'text', 'pub_date', 'author',)
+        read_only_fields = ('id', 'pub_date', 'author',)
+
+    def validate(self, data):
+        is_review_exist = Review.objects.filter(
+            author=self.context['request'].user,
+            title=self.context['view'].kwargs['title_id']
+        ).exists()
+
+        if self.context['request'].method == 'POST' and is_review_exist:
+            raise serializers.ValidationError(
+                'Вы не можете оставить такой же отзыв дважды.')
+
+        return data
