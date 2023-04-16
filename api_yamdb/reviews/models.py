@@ -47,19 +47,41 @@ class User(AbstractUser):
         blank=True
     )
 
+    @property
+    def is_user(self):
+        return self.role == USER
+
+    @property
+    def is_admin(self):
+        return self.role == ADMIN
+
+    @property
+    def is_moderator(self):
+        return self.role == MODERATOR
+
+    class Meta:
+        ordering = ('id',)
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
+
     def __str__(self):
         return self.username
 
 
 class Category(models.Model):
     name = models.CharField(
-        'id',
-        max_length=200,
+        'имя категории',
+        max_length=200
     )
     slug = models.SlugField(
+        'слаг категории',
         unique=True,
         db_index=True
     )
+
+    class Meta:
+        verbose_name = 'Категория'
+        verbose_name_plural = 'Категории'
 
     def __str__(self):
         return f'{self.name} {self.name}'
