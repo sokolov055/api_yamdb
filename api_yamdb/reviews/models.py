@@ -1,5 +1,6 @@
-from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db import models
 
 USER = 'user'
 ADMIN = 'admin'
@@ -48,6 +49,23 @@ class User(AbstractUser):
     )
     confirmation_code = models.CharField(max_length=15, blank=True)
 
+    @property
+    def is_user(self):
+        return self.role == USER
+
+    @property
+    def is_admin(self):
+        return self.role == ADMIN
+
+    @property
+    def is_moderator(self):
+        return self.role == MODERATOR
+
+    class Meta:
+        ordering = ('id',)
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
+
     def __str__(self):
         return self.username
 
@@ -60,6 +78,37 @@ class User(AbstractUser):
         return self.role == 'moderator'
 
 
+class Category(models.Model):
+    name = models.CharField(
+        'имя категории',
+        max_length=200
+    )
+    slug = models.SlugField(
+        'слаг категории',
+        unique=True,
+        db_index=True
+    )
+
+    class Meta:
+        verbose_name = 'Категория'
+        verbose_name_plural = 'Категории'
+
+    def __str__(self):
+        return f'{self.name} {self.name}'
+
+
+class Genre(models.Model):
+    name = models.CharField(
+        'имя жанра',
+        max_length=200,
+    )
+    slug = models.SlugField(
+        'слаг жанра',
+        unique=True,
+        db_index=True
+    )
+
+
 class Title(models.Model):
     name = models.CharField(
         'название',
@@ -69,16 +118,60 @@ class Title(models.Model):
     year = models.IntegerField(
         'год',
     )
-    category = models.CharField(
-        'категория',
-        max_length=150,
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.SET_NULL,
+        related_name='titles',
+        verbose_name='категория',
+        null=True,
         blank=True
     )
-    genre = models.CharField(
-        'жанр',
-        max_length=150,
+    genre = models.ManyToManyField(
+        Genre,
+        related_name='titles',
+        verbose_name='жанр'
+    )
+    description = models.TextField(
+        'описание',
+        max_length=255,
+        null=True,
         blank=True
     )
 
     def __str__(self):
         return self.name
+
+
+class Review(models.Model):
+    text = models.TextField()
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='reviews',
+        verbose_name='Автор'
+    )
+    title = models.ForeignKey(
+        Title,
+        on_delete=models.CASCADE,
+        related_name='reviews',
+        verbose_name='Произведение'
+    )
+    score = models.IntegerField(
+        'Оценка',
+        validators=[MinValueValidator(1), MaxValueValidator(10)]
+    )
+    pub_date = models.DateField(
+        'Дата публикации отзыва',
+        auto_now_add=True
+    )
+
+    class Meta:
+        ordering = ['-pub_date']
+        verbose_name = 'Отзыв'
+        verbose_name_plural = 'Отзывы'
+        # constrains = [
+        #     models.UniqueConstraint(
+        #         fields=['author', 'tile'],
+        #         name='unique_author_title'
+        #     )
+        # ]
