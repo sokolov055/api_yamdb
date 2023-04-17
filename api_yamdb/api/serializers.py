@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from reviews.models import Category, Genre, Review, Title, User
+from reviews.models import Category, Comment, Genre, Review, Title, User
 
 
 class SignUpSerializer(serializers.ModelSerializer):
@@ -99,3 +99,16 @@ class ReviewSerializer(serializers.ModelSerializer):
                 'Вы не можете оставить такой же отзыв дважды.')
 
         return data
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        required=False,
+        read_only=True,
+        slug_field='username',
+    )
+
+    class Meta:
+        model = Comment
+        fields = ('id', 'text', 'pub_date', 'author',)
+        read_only_fields = ('id', 'pub_date', 'author',)
