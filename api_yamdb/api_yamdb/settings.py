@@ -1,7 +1,6 @@
-from pathlib import Path
-import string
+# from pathlib import Path
+# import string
 import datetime
-
 import os
 
 
@@ -25,6 +24,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework_simplejwt',
     'rest_framework',
     'django_filters',
     'reviews',

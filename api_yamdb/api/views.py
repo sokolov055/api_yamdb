@@ -8,11 +8,12 @@ from django.shortcuts import get_object_or_404
 from reviews.models import Category, Genre, Title, User
 from .serializers import (CategorySerializer, GenreSerializer,
                           ReviewSerializer, TitleReadSerializer,
-                          TitleWriteSerializer, UsersSerializer, 
+                          TitleWriteSerializer, UsersSerializer,
                           SignUpSerializer, ObtainTokenSerializer)
 from .permissions import (AdminPermission,
-                          IsAdminOrReadOnly,
-                          IsAuthorAdminModerOrReadOnly)
+                          # IsAdminOrReadOnly,
+                          # IsAuthorAdminModerOrReadOnly
+                          )
 from .utils import confirmation_creater
 
 
@@ -47,7 +48,7 @@ class TitleViewSet(ModelViewSet):
     """
     queryset = Title.objects.all()
     serializer_class = TitleReadSerializer
-    
+
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
             return TitleReadSerializer
@@ -90,7 +91,7 @@ class AuthToken(APIView):
             )
         return Response(
             serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST
+            status=status.HTTP_400_BAD_REQUEST)
 
 
 class CategoryViewSet(ModelViewSet):
@@ -107,12 +108,12 @@ class GenreViewSet(ModelViewSet):
 
 class ReviewViewSet(ModelViewSet):
     serializer_class = ReviewSerializer
-    #permission_classes = (IsOwnerAdminModeratorOrReadOnly,)
+    # permission_classes = (IsOwnerAdminModeratorOrReadOnly,)
 
     def get_queryset(self):
         title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
         return title.reviews.all()
-    
+
     def perform_queryset(self):
         title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
         serializer.save(
