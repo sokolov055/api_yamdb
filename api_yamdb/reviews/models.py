@@ -47,7 +47,12 @@ class User(AbstractUser):
         max_length=150,
         blank=True
     )
-    confirmation_code = models.CharField(max_length=15, blank=True)
+    confirmation_code = models.CharField(
+        max_length=15,
+        blank=True,
+        null=True,
+        default='xxxx'
+    )
 
     @property
     def is_user(self):
@@ -68,14 +73,6 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
-
-    @property
-    def is_admin(self):
-        return self.is_superuser or self.role == 'admin' or self.is_staff
-
-    @property
-    def is_moder(self):
-        return self.role == 'moderator'
 
 
 class Category(models.Model):
