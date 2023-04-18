@@ -1,24 +1,27 @@
+from math import Avg
+from api.filters import TitleFilter
 from django.shortcuts import get_object_or_404
-from rest_framework import status, viewsets
-from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import permissions, status, viewsets
+
+from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
-from .mixins import ModelMixinSet
 from rest_framework_simplejwt.tokens import RefreshToken
 from reviews.models import Category, Genre, Review, Title, User
+from .mixins import ModelMixinSet
 from api.filters import TitleFilter
 from .permissions import (IsAdminOrReadOnly,
                           IsAuthorAdminModerOrReadOnly,
                           IsAdminPermission)
 from rest_framework.permissions import IsAuthenticated
 from .serializers import (CategorySerializer, CommentSerializer,
-                          GenreSerializer, ObtainTokenSerializer,
-                          ReviewSerializer, SignUpSerializer,
-                          TitleReadSerializer, TitleWriteSerializer,
-                          UsersSerializer, NotAdminSerializer)
+                          GenreSerializer, NotAdminSerializer,
+                          ObtainTokenSerializer, ReviewSerializer,
+                          SignUpSerializer, TitleReadSerializer,
+                          TitleWriteSerializer, UsersSerializer)
 from .utils import confirmation_creater
 
 
@@ -106,7 +109,7 @@ class TitleViewSet(ModelViewSet):
     """
     Получить список всех объектов. Права доступа: Доступно без токена
     """
-    queryset = Title.objects.all()
+    queryset = Title.objects.all().annotate(rating=Avg('reviews__score'))
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend, )
     filterset_class = TitleFilter
