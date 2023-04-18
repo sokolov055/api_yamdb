@@ -1,5 +1,5 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import permissions, status, viewsets
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
@@ -10,8 +10,10 @@ from .mixins import ModelMixinSet
 from rest_framework_simplejwt.tokens import RefreshToken
 from reviews.models import Category, Genre, Review, Title, User
 from api.filters import TitleFilter
-from .permissions import (IsAdminPermission, IsAdminOrReadOnly,
-                          IsAuthorAdminModerOrReadOnly)
+from .permissions import (IsAdminOrReadOnly,
+                          IsAuthorAdminModerOrReadOnly,
+                          IsAdminPermission)
+from rest_framework.permissions import IsAuthenticated
 from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, ObtainTokenSerializer,
                           ReviewSerializer, SignUpSerializer,
@@ -20,22 +22,24 @@ from .serializers import (CategorySerializer, CommentSerializer,
 from .utils import confirmation_creater
 
 
-class UsersViewSet(viewsets.ModelViewSet):
+class UsersViewSet(ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UsersSerializer
-    permission_classes = (IsAdminPermission,)
-    lookup_field = "username"
+    permission_classes = (IsAuthenticated, IsAdminPermission)
+    lookup_field = 'username'
     filter_backends = (SearchFilter, )
     search_fields = ('username', )
+    http_method_names = ['get', 'post', 'patch', 'delete']
 
     @action(
-        methods=["GET", "PATCH"],
+        methods=['GET', 'PATCH'],
         detail=False,
-        permission_classes=[permissions.IsAuthenticated],
+        permission_classes=[IsAuthenticated],
+        url_path='me'
     )
     def me(self, request):
         serializer = UsersSerializer(request.user)
-        if request.method == "PATCH":
+        if request.method == 'PATCH':
             if request.user.is_admin:
                 serializer = UsersSerializer(
                     request.user,
