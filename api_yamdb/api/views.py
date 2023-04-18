@@ -1,9 +1,9 @@
 from math import Avg
-
 from api.filters import TitleFilter
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import permissions, status, viewsets
+
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
@@ -11,10 +11,12 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.tokens import RefreshToken
 from reviews.models import Category, Genre, Review, Title, User
-
 from .mixins import ModelMixinSet
-from .permissions import (IsAdminOrReadOnly, IsAdminPermission,
-                          IsAuthorAdminModerOrReadOnly)
+from api.filters import TitleFilter
+from .permissions import (IsAdminOrReadOnly,
+                          IsAuthorAdminModerOrReadOnly,
+                          IsAdminPermission)
+from rest_framework.permissions import IsAuthenticated
 from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, NotAdminSerializer,
                           ObtainTokenSerializer, ReviewSerializer,
@@ -23,22 +25,24 @@ from .serializers import (CategorySerializer, CommentSerializer,
 from .utils import confirmation_creater
 
 
-class UsersViewSet(viewsets.ModelViewSet):
+class UsersViewSet(ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UsersSerializer
-    permission_classes = (IsAdminPermission,)
-    lookup_field = "username"
+    permission_classes = (IsAuthenticated, IsAdminPermission)
+    lookup_field = 'username'
     filter_backends = (SearchFilter, )
     search_fields = ('username', )
+    http_method_names = ['get', 'post', 'patch', 'delete']
 
     @action(
-        methods=["GET", "PATCH"],
+        methods=['GET', 'PATCH'],
         detail=False,
-        permission_classes=[permissions.IsAuthenticated],
+        permission_classes=[IsAuthenticated],
+        url_path='me'
     )
     def me(self, request):
         serializer = UsersSerializer(request.user)
-        if request.method == "PATCH":
+        if request.method == 'PATCH':
             if request.user.is_admin:
                 serializer = UsersSerializer(
                     request.user,
@@ -57,6 +61,13 @@ class UsersViewSet(viewsets.ModelViewSet):
 
 class SignUpView(APIView):
     def post(self, request):
+        user = User.objects.filter(**request.data)
+
+        if user.exists():
+            username = request.data.get('username')
+            confirmation_creater(username)
+            return Response(request.data, status=status.HTTP_200_OK)
+
         serializer = SignUpSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
