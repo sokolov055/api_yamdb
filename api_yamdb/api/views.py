@@ -54,6 +54,13 @@ class UsersViewSet(viewsets.ModelViewSet):
 
 class SignUpView(APIView):
     def post(self, request):
+        user = User.objects.filter(**request.data)
+
+        if user.exists():
+            username = request.data.get('username')
+            confirmation_creater(username)
+            return Response(request.data, status=status.HTTP_200_OK)
+
         serializer = SignUpSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
