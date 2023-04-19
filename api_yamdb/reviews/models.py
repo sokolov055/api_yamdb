@@ -189,7 +189,7 @@ class Review(models.Model):
 
 
 class Comment(models.Model):
-    Review = models.ForeignKey(
+    review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
         related_name='comments',
