@@ -195,7 +195,7 @@ class Comment(models.Model):
         related_name='comments',
         verbose_name='Отзыв'
     )
-    text = models.CharField(
+    text = models.TextField(
         'текст комментария',
         max_length=200
     )
@@ -211,7 +211,6 @@ class Comment(models.Model):
     )
 
     class Meta:
-        ordering = ['-pub_date']
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
 
