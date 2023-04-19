@@ -1,7 +1,7 @@
 import csv
 from django.conf import settings
 from django.core.management import BaseCommand
-from reviews.models import Category, Genre, Title, User, Review
+from reviews.models import Category, Genre, Title, User, Review, Comment
 
 TABLES = {
     User: 'users.csv',
@@ -9,7 +9,7 @@ TABLES = {
     Genre: 'genre.csv',
     Title: 'titles.csv',
     Review: 'review.csv',
-    # Comment: 'comments.csv',
+    Comment: 'comments.csv',
 }
 
 
