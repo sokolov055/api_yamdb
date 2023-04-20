@@ -2,22 +2,20 @@ from rest_framework import serializers
 from reviews.models import Category, Comment, Genre, Review, Title, User
 
 
-class SignUpSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ('email', 'username')
+class SignUpSerializer(serializers.Serializer):
+    email = serializers.EmailField(max_length=254, required=True)
+    username = serializers.RegexField(regex=r'^[\w.@+-]+\Z',
+                                      max_length=150, required=True)
 
-    def validate(self, data):
-        if data.get('username') != 'me':
-            return data
-        raise serializers.ValidationError(
-            'Не подходящее имя пользователя'
-        )
+    def validate_username(self, value):
+        if value.lower() == 'me':
+            raise serializers.ValidationError('username "me" недоступен')
+        return value
 
 
 class ObtainTokenSerializer(serializers.ModelSerializer):
     username = serializers.CharField(max_length=150)
-    confirmation_code = serializers.CharField(max_length=15)
+    confirmation_code = serializers.CharField(max_length=150)
 
     class Meta:
         model = User

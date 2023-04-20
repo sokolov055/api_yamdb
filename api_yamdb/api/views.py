@@ -1,9 +1,10 @@
-from api.filters import TitleFilter
-from django.db.models import Avg
+from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
+from rest_framework import permissions, status, viewsets
+from rest_framework.decorators import action, api_view
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import status, viewsets
-from rest_framework.decorators import action
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
 from rest_framework.filters import SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -16,11 +17,11 @@ from .mixins import ModelMixinSet
 from .permissions import (IsAdminOrReadOnly, IsAdminPermission,
                           IsAuthorAdminModerOrReadOnly)
 from .serializers import (CategorySerializer, CommentSerializer,
-                          GenreSerializer, NotAdminSerializer,
-                          ObtainTokenSerializer, ReviewSerializer,
-                          SignUpSerializer, TitleReadSerializer,
-                          TitleWriteSerializer, UsersSerializer)
-from .utils import confirmation_creater
+                          GenreSerializer, ObtainTokenSerializer,
+                          ReviewSerializer, SignUpSerializer,
+                          TitleReadSerializer, TitleWriteSerializer,
+                          UsersSerializer, NotAdminSerializer)
+from api_yamdb.settings import NOREPLY_YAMDB_EMAIL
 
 
 class UsersViewSet(ModelViewSet):
@@ -57,28 +58,26 @@ class UsersViewSet(ModelViewSet):
         return Response(serializer.data)
 
 
-class SignUpView(APIView):
-    def post(self, request):
-        user = User.objects.filter(**request.data)
-
-        if user.exists():
-            username = request.data.get('username')
-            confirmation_creater(username)
-            return Response(request.data, status=status.HTTP_200_OK)
-
-        serializer = SignUpSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            username = request.data.get('username')
-            confirmation_creater(username)
-            return Response(
-                serializer.data,
-                status=status.HTTP_200_OK
-            )
-        return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST
-        )
+@api_view(['POST'])
+def sign_up(request):
+    serializer = SignUpSerializer(data=request.data)
+    email = request.data.get('email')
+    serializer.is_valid(raise_exception=True)
+    try:
+        user, created = User.objects.get_or_create(**serializer.validated_data)
+    except IntegrityError:
+        return Response('Попробуйте другой email или username',
+                        status=status.HTTP_400_BAD_REQUEST)
+    confirmation_code = default_token_generator.make_token(user)
+    send_mail(
+        subject='Регистрация',
+        message=confirmation_code,
+        from_email=NOREPLY_YAMDB_EMAIL,
+        recipient_list=[email],
+        fail_silently=False
+    )
+    return Response(serializer.data,
+                    status=status.HTTP_200_OK)
 
 
 class AuthToken(APIView):
