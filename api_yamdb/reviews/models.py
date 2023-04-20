@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+
 from .validators import validate_username
 
 USER = 'user'
@@ -188,13 +189,13 @@ class Review(models.Model):
 
 
 class Comment(models.Model):
-    Review = models.ForeignKey(
+    review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
         related_name='comments',
         verbose_name='Отзыв'
     )
-    text = models.CharField(
+    text = models.TextField(
         'текст комментария',
         max_length=200
     )
@@ -210,7 +211,6 @@ class Comment(models.Model):
     )
 
     class Meta:
-        ordering = ['-pub_date']
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
 
