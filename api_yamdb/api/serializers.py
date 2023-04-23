@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from reviews.models import Category, Comment, Genre, Review, Title, User
+from django.core.exceptions import ValidationError
 
 
 class SignUpSerializer(serializers.Serializer):
@@ -7,7 +8,14 @@ class SignUpSerializer(serializers.Serializer):
     username = serializers.RegexField(regex=r'^[\w.@+-]+\Z',
                                       max_length=150, required=True)
 
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise ValidationError('Email уже зарегистрирован')
+        return value
+
     def validate_username(self, value):
+        if User.objects.filter(username=value).exists():
+            raise ValidationError('Username уже зарегистрирован')
         if value.lower() == 'me':
             raise serializers.ValidationError('username "me" недоступен')
         return value
@@ -30,12 +38,12 @@ class UsersSerializer(serializers.ModelSerializer):
             'last_name', 'bio', 'role')
         lookup_field = 'username'
 
-        def validate(self, data):
-            if data.get('username') != 'me':
-                return data
-            raise serializers.ValidationError(
-                'Не подходящее имя пользователя'
-            )
+    def validate(self, data):
+        if data.get('username') != 'me':
+            return data
+        raise serializers.ValidationError(
+            'Не подходящее имя пользователя'
+        )
 
 
 class NotAdminSerializer(serializers.ModelSerializer):
