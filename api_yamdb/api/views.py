@@ -1,6 +1,5 @@
 from django.db.models import Avg
 from api.filters import TitleFilter
-from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
 from rest_framework import status, viewsets
 from rest_framework.decorators import action, api_view
@@ -28,12 +27,19 @@ from api_yamdb.settings import NOREPLY_YAMDB_EMAIL
 
 class UsersViewSet(ModelViewSet):
     queryset = User.objects.all()
-    serializer_class = UsersSerializer
     permission_classes = (IsAuthenticated, IsAdminPermission)
     lookup_field = 'username'
-    filter_backends = (SearchFilter, )
-    search_fields = ('username', )
+    filter_backends = (SearchFilter,)
+    search_fields = ('username',)
     http_method_names = ['get', 'post', 'patch', 'delete']
+
+    def get_serializer_class(self):
+        if self.action == 'me':
+            if self.request.user.is_admin:
+                return UsersSerializer
+            else:
+                return NotAdminSerializer
+        return UsersSerializer
 
     @action(
         methods=['GET', 'PATCH'],
@@ -42,34 +48,25 @@ class UsersViewSet(ModelViewSet):
         url_path='me'
     )
     def me(self, request):
-        serializer = UsersSerializer(request.user)
-        if request.method == 'PATCH':
-            if request.user.is_admin:
-                serializer = UsersSerializer(
-                    request.user,
-                    data=request.data,
-                    partial=True)
-            else:
-                serializer = NotAdminSerializer(
-                    request.user,
-                    data=request.data,
-                    partial=True)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.data)
+        serializer_class = self.get_serializer_class()
+        serializer = serializer_class(request.user,
+                                      data=request.data,
+                                      partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
 def sign_up(request):
+    is_user = User.objects.filter(username=request.data.get('username'),
+                                  email=request.data.get('email'))
+    if is_user:
+        return Response(request.data, status=status.HTTP_200_OK)
     serializer = SignUpSerializer(data=request.data)
     email = request.data.get('email')
     serializer.is_valid(raise_exception=True)
-    try:
-        user, created = User.objects.get_or_create(**serializer.validated_data)
-    except IntegrityError:
-        return Response('Попробуйте другой email или username',
-                        status=status.HTTP_400_BAD_REQUEST)
+    user, created = User.objects.get_or_create(**serializer.validated_data)
     confirmation_code = default_token_generator.make_token(user)
     send_mail(
         subject='Регистрация',
@@ -78,8 +75,7 @@ def sign_up(request):
         recipient_list=[email],
         fail_silently=False
     )
-    return Response(serializer.data,
-                    status=status.HTTP_200_OK)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class AuthToken(APIView):
@@ -108,7 +104,7 @@ class TitleViewSet(ModelViewSet):
     """
     Получить список всех объектов. Права доступа: Доступно без токена
     """
-    queryset = Title.objects.all().annotate(rating=Avg('reviews__score'))
+    queryset = Title.objects.annotate(rating=Avg('reviews__score'))
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend, )
     filterset_class = TitleFilter
