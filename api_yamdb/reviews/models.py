@@ -2,7 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-from .validators import validate_username
+from .validators import validate_username, validate_year
 
 USER = 'user'
 ADMIN = 'admin'
@@ -94,7 +94,7 @@ class Category(models.Model):
         verbose_name_plural = 'Категории'
 
     def __str__(self):
-        return f'{self.name} {self.name}'
+        return self.name
 
 
 class Genre(models.Model):
@@ -113,7 +113,7 @@ class Genre(models.Model):
         verbose_name_plural = 'Жанры'
 
     def __str__(self):
-        return f'{self.name} {self.name}'
+        return self.name
 
 
 class Title(models.Model):
@@ -124,6 +124,8 @@ class Title(models.Model):
     )
     year = models.IntegerField(
         'год',
+        validators=(validate_year, ),
+        db_index=True,
     )
     category = models.ForeignKey(
         Category,
@@ -146,6 +148,7 @@ class Title(models.Model):
     )
 
     class Meta:
+        ordering = ['-id']
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
 
@@ -168,8 +171,12 @@ class Review(models.Model):
         verbose_name='Произведение'
     )
     score = models.IntegerField(
-        'Оценка',
-        validators=[MinValueValidator(1), MaxValueValidator(10)]
+        'оценка',
+        validators=(
+            MinValueValidator(1),
+            MaxValueValidator(10)
+        ),
+        error_messages={'validators': 'Оценка от 1 до 10!'}
     )
     pub_date = models.DateTimeField(
         'Дата публикации отзыва',
@@ -186,6 +193,9 @@ class Review(models.Model):
                 name='unique_review'
             )
         ]
+
+    def __str__(self):
+        return self.text
 
 
 class Comment(models.Model):
